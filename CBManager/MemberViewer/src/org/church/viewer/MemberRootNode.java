@@ -16,14 +16,14 @@ import org.openide.nodes.Children;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.Utilities;
 import static org.church.viewer.Bundle.*;
-
+    
 public class MemberRootNode extends AbstractNode {
 
     @Messages("CTRL_RootName=Root")
     public MemberRootNode(Children kids) {
         super(kids);
         setDisplayName(CTRL_RootName());
-    }
+}
 
     @Override
     public Action[] getActions(boolean context) {
