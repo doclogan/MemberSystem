@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 AutoUpdate-Show-In-Client: true
-OpenIDE-Module: org.shop.parameters
-OpenIDE-Module-Localizing-Bundle: org/shop/parameters/Bundle.properties
+OpenIDE-Module: org.church.parameter
+OpenIDE-Module-Localizing-Bundle: org/church/parameter/Bundle.properties
 OpenIDE-Module-Specification-Version: 1.0
 
