@@ -122,8 +122,7 @@ public final class MemberEditorTopComponent extends TopComponent implements Look
             ic.add(new MySavable());
         }
     }
-    private static final Icon ICON = ImageUtilities.loadImageIcon("org/shop/editor/Icon.png", true);
-
+    
     void resetFields() {
         member = new Member1();
         firstName_field.setText("");
@@ -134,7 +133,7 @@ public final class MemberEditorTopComponent extends TopComponent implements Look
         sex_field.setText("");
 
     }
-
+    private static final Icon ICON = ImageUtilities.loadImageIcon("org/shop/editor/Icon.png", true);
     private class MySavable extends AbstractSavable implements Icon {
 
         MySavable() {

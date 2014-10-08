@@ -5,7 +5,10 @@
  */
 package org.church.editor;
 
+import demo.ContribTypes;
+import demo.Contribution;
 import demo.Envelope;
+import demo.Joint;
 import demo.Member1;
 import demo.Memenv;
 import java.awt.Component;
@@ -13,14 +16,17 @@ import java.awt.Graphics;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
-import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
+import javax.swing.DefaultCellEditor;
 import javax.swing.Icon;
 import org.church.parameters.Parameters;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -69,6 +75,9 @@ public final class EnvelopeEditorTopComponent extends TopComponent implements Lo
     private UndoRedo.Manager manager = new UndoRedo.Manager();
     InstanceContent ic = new InstanceContent();
     Envelope envelope;
+     Member1 member;
+     Joint jt;
+    ContribDataModel ctModel;
     public EnvelopeEditorTopComponent() {
         initComponents();
         setName(Bundle.CTL_EnvelopeEditorTopComponent());
@@ -124,6 +133,8 @@ public final class EnvelopeEditorTopComponent extends TopComponent implements Lo
                 if (envelope.getIdenvelope() != null) {
                     Envelope env = entityManager.find(Envelope.class, envelope.getIdenvelope());
                     env.setTotal(new Integer(total_field.getText()));
+                    env.setContributionList(ctModel.getlc());
+                    entityManager.merge(env);
                     entityManager.getTransaction().commit();
                     tc().ic.remove(this);
                     unregister();
@@ -132,8 +143,30 @@ public final class EnvelopeEditorTopComponent extends TopComponent implements Lo
                     List<Envelope> resultList = query.getResultList();
                     envelope.setIdenvelope(resultList.size()+1);
                     envelope.setTotal(new Integer(total_field.getText()));
+                    query = entityManager.createNamedQuery("Contribution.findAll");
+                    List<Contribution> resultListContrib = query.getResultList();
+                    Integer cId = resultListContrib.size()+1;
+                    List<Contribution> lc = ctModel.getlc();                    
+                    for (Contribution ct : lc) {
+                        ct.setIdcontribution(cId);
+                        ct.setIdenvelope(envelope);
+                        cId = cId + 1;
+                    }
+                    envelope.setContributionList(lc);
+                    query = entityManager.createNamedQuery("Joint.findAll");
+                    List<Joint> resultListJoint = query.getResultList();
+                    Integer jId = resultListJoint.size()+1;
+                    jt.setIdjoint(jId);
+                    jt.setIdenvelope(envelope);
+                    jt.setIdmember(member);
+                    List<Joint> jtList = new ArrayList();
+                    jtList.add(jt);
+                    envelope.setJointList(jtList);
+                    jtList = member.getJointList();
+                    jtList.add(jt);
                     //add more fields that will populate all the other columns in the table!
                     entityManager.persist(envelope);
+                    entityManager.merge(member);
                     entityManager.getTransaction().commit();
                 }               
             }
@@ -178,14 +211,31 @@ public final class EnvelopeEditorTopComponent extends TopComponent implements Lo
         Collection<Member1> coll = r.allInstances();
         if (!coll.isEmpty()) {
             for (Member1 mem : coll) {
-                Member1 member = mem;
+                member = mem;
                 firstName_field.setText(mem.getFirstName());
                 lastName_field.setText(mem.getLastName());
                 address1_field.setText(mem.getMemAddress1());
                 address2_field.setText(mem.getMemAddress2());
-                
                 envelope = getEnvelope(mem);
-                total_field.setText(envelope.getTotal().toString());
+                if (envelope != null){
+                    total_field.setText(envelope.getTotal().toString());
+                    ctModel = new ContribDataModel(envelope.getContributionList());
+                    contribTable.setModel(ctModel);
+                    setColModel(contribTable);                   
+                } else {
+                    total_field.setText("0.00");
+                    Contribution ct = new Contribution();
+                    ContribTypes ctType = new ContribTypes("Tithe");
+                    ct.setIdcontribTypes(ctType);
+                    ct.setContribAmt(BigDecimal.ZERO);
+                    List cList = new ArrayList();
+                    cList.add(ct);
+                    ctModel = new ContribDataModel(cList);
+                    contribTable.setModel(ctModel);
+                    setColModel(contribTable);
+                    envelope = new Envelope();
+                    jt = new Joint();
+                }
             }
         } else {
             firstName_field.setText("[no name]");
@@ -200,12 +250,23 @@ public final class EnvelopeEditorTopComponent extends TopComponent implements Lo
     }
     public Envelope getEnvelope(Member1 mem){
         EntityManager em = Persistence.createEntityManagerFactory("MemberLibraryPU").createEntityManager();
-        TypedQuery<Memenv> tquery = em.createQuery(
-        "SELECT m FROM Memenv m WHERE m.envDate = :envDate and m.idmember = :idmember", Memenv.class);
-        Date date_param = Parameters.getInstance().getSabDate();
-        Memenv menv = tquery.setParameter("idmember", mem.getIdmember()).setParameter("envDate",date_param).getSingleResult();
-        Query query = em.createNamedQuery("Envelope.findByIdenvelope");
-        return (Envelope) query.setParameter("idenvelope", menv.getIdenvelope()).getSingleResult();
+        try {
+            TypedQuery<Memenv> tquery = em.createQuery(
+            "SELECT m FROM Memenv m WHERE m.envDate = :envDate and m.idmember = :idmember", Memenv.class);
+            Date date_param = Parameters.getInstance().getSabDate();
+            Memenv menv = tquery.setParameter("idmember", mem.getIdmember()).setParameter("envDate",date_param).getSingleResult();
+            Query query = em.createNamedQuery("Envelope.findByIdenvelope");
+            return (Envelope) query.setParameter("idenvelope", menv.getIdenvelope()).getSingleResult();
+        } catch(NoResultException e) {
+            return null;
+        }
+    }
+    public javax.swing.table.TableColumnModel setColModel(javax.swing.JTable table) {
+        javax.swing.table.TableColumn ctCol = 
+                           table.getColumnModel().getColumn(0);        
+        javax.swing.JComboBox ctCombo = new CtTypeComboDataModel();
+        ctCol.setCellEditor(new DefaultCellEditor(ctCombo));
+        return table.getColumnModel();
     }
     /**
      * This method is called from within the constructor to initialize the form.
@@ -226,7 +287,7 @@ public final class EnvelopeEditorTopComponent extends TopComponent implements Lo
         total_field = new javax.swing.JTextField();
         jPanel4 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        contribTable = new javax.swing.JTable();
 
         firstName_field.setText(org.openide.util.NbBundle.getMessage(EnvelopeEditorTopComponent.class, "EnvelopeEditorTopComponent.firstName_field.text")); // NOI18N
 
@@ -290,7 +351,7 @@ public final class EnvelopeEditorTopComponent extends TopComponent implements Lo
                 .addContainerGap())
         );
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        contribTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
                 {null, null, null, null},
@@ -301,7 +362,7 @@ public final class EnvelopeEditorTopComponent extends TopComponent implements Lo
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
-        jScrollPane1.setViewportView(jTable1);
+        jScrollPane1.setViewportView(contribTable);
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -352,6 +413,7 @@ public final class EnvelopeEditorTopComponent extends TopComponent implements Lo
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField address1_field;
     private javax.swing.JTextField address2_field;
+    private javax.swing.JTable contribTable;
     private javax.swing.JTextField firstName_field;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
@@ -359,7 +421,6 @@ public final class EnvelopeEditorTopComponent extends TopComponent implements Lo
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
     private javax.swing.JTextField lastName_field;
     private javax.swing.JTextField total_field;
     // End of variables declaration//GEN-END:variables
