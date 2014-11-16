@@ -3,52 +3,43 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.church.editor;
+package org.church.report;
 
-/**
- *
- * @author derrick
- */
 import demo.ContribTypes;
 import demo.Contribution;
+import demo.Memenv;
 import java.math.BigDecimal;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
 import org.openide.windows.WindowManager;
 
-public class ContribDataModel extends AbstractTableModel{
-/*
- * First row of array data contains column names
-*/
+/**
+ *
+ * @author derrick
+ */
+public class ReportListTableModel extends AbstractTableModel{
     protected int start_num_rows;
     protected int nextEmptyRow;
     protected int numRows;
     
     String[] colNames = {
-                            "Type",
-                            "Amount",
+                            "First Name",
+                            "Last Name",
+                            "Envelope No.",
                         };
 
     int NUM_COLUMNS = colNames.length;
-    List<Contribution> lc;
+    List<Memenv> lm;
     
-    ContribDataModel(List<Contribution> lc) {
-        this.lc = lc;
-        start_num_rows = lc.size();
-        nextEmptyRow = lc.size();
-        numRows      = lc.size();
+    ReportListTableModel(List<Memenv> lm) {
+        this.lm = lm;
+        start_num_rows = lm.size();
+        nextEmptyRow = lm.size();
+        numRows      = lm.size();
     }
 
-    public List<Contribution> getlc() {
-        return lc;
-    }
-    
-    public BigDecimal contribTotal() {
-        BigDecimal sumContrib = BigDecimal.ZERO;
-        for (Contribution ct : lc) {
-            sumContrib = sumContrib.add(ct.getContribAmt());
-        }
-        return sumContrib;
+    public List<Memenv> getm() {
+        return lm;
     }
     
     @Override
@@ -58,7 +49,7 @@ public class ContribDataModel extends AbstractTableModel{
 
     @Override
     public int getRowCount() {
-        return lc.size();
+        return lm.size();
     }
     @Override
     public String getColumnName(int col) {
@@ -68,12 +59,14 @@ public class ContribDataModel extends AbstractTableModel{
     @Override
     public Object getValueAt(int row, int col) {
         try{
-            Contribution c = (Contribution) lc.get(row);
+            Memenv m = (Memenv) lm.get(row);
             switch (col) {
              case 0:
-               return c.getIdcontribTypes().getIdcontribTypes();
+               return m.getFirstName();
              case 1:
-               return c.getContribAmt();
+               return m.getLastName();
+             case 2:
+               return m.getIdenvelope();    
             }
         } catch (Exception e) {
             return null;
@@ -100,7 +93,7 @@ public class ContribDataModel extends AbstractTableModel{
     public boolean isCellEditable(int row, int col) {
         //Note that the data/cell address is constant,
         //no matter where the cell appears onscreen.                  
-        return true;
+        return false;
     }
 
     /*
@@ -109,29 +102,5 @@ public class ContribDataModel extends AbstractTableModel{
      */
     @Override
     public void setValueAt(Object value, int row, int col) {
-      Contribution c = (Contribution) lc.get(row);
-      if(col == 0)
-        c.setIdcontribTypes(new ContribTypes((String) value));
-      if(col == 1)
-        c.setContribAmt((BigDecimal) value);       
-      lc.set(row, c);
-      EnvelopeEditorTopComponent tc = (EnvelopeEditorTopComponent) WindowManager.getDefault().findTopComponent("EnvelopeEditorTopComponent");
-      tc.updContrib(contribTotal());
-      tc.modify();
-      fireTableCellUpdated(row, col);
-    }
-
-    public void addRow(int row) {
-        Contribution c =  new Contribution();
-        c.setIdcontribTypes(new ContribTypes((String) "Local"));
-        c.setContribAmt(BigDecimal.ZERO);
-        lc.add(c);
-    }
-    public boolean delRow(int row) {
-        if (row < 0 || row >=  lc.size())
-            return false;
-        else {
-            return true;
-        }
     }
 }

@@ -7,6 +7,7 @@ package org.church.toolbar;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Date;
 import org.church.parameters.Parameters;
 
 /**
@@ -20,7 +21,8 @@ public class SabbathDatePanel extends javax.swing.JPanel {
      */
     public SabbathDatePanel() {
         initComponents();
-        
+        sabDateChooser.setDate(new Date());
+        Parameters.getInstance().setSabDate(sabDateChooser.getDate());
         sabDateChooser.getDateEditor().addPropertyChangeListener(new PropertyChangeListener() {
         @Override
             public void propertyChange(PropertyChangeEvent e) {

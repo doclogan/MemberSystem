@@ -3,7 +3,7 @@
     <type>org.netbeans.modules.apisupport.project</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
-            <code-name-base>org.church.editor</code-name-base>
+            <code-name-base>org.church.report</code-name-base>
             <suite-component/>
             <module-dependencies>
                 <dependency>
@@ -16,14 +16,6 @@
                 </dependency>
                 <dependency>
                     <code-name-base>org.church.model</code-name-base>
-                    <build-prerequisite/>
-                    <compile-dependency/>
-                    <run-dependency>
-                        <specification-version>1.0</specification-version>
-                    </run-dependency>
-                </dependency>
-                <dependency>
-                    <code-name-base>org.church.parameters</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
@@ -45,14 +37,6 @@
                     <compile-dependency/>
                     <run-dependency>
                         <specification-version>7.62.1</specification-version>
-                    </run-dependency>
-                </dependency>
-                <dependency>
-                    <code-name-base>org.openide.dialogs</code-name-base>
-                    <build-prerequisite/>
-                    <compile-dependency/>
-                    <run-dependency>
-                        <specification-version>7.38.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -81,10 +65,6 @@
                 </dependency>
             </module-dependencies>
             <public-packages/>
-            <class-path-extension>
-                <runtime-relative-path>ext/jcalendar-1.4.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jcalendar-1.4.jar</binary-origin>
-            </class-path-extension>
         </data>
     </configuration>
 </project>
